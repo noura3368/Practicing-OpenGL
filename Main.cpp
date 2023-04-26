@@ -63,7 +63,7 @@ int main() {
 	};
 
 	// create window project size (length and width), name, if we want full screen
-	GLFWwindow* window = glfwCreateWindow(800, 800, "3DProject", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(800, 800, "Noura's Project", NULL, NULL);
 	// error checking if window doesnt open properly
 	if (window == NULL) {
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -76,7 +76,7 @@ int main() {
 	gladLoadGL();
 
 	//tell opengl the viewport of our window which is the area of window we want opengl rendering
-	glViewport(0, 0, 800, 800);
+	glad_glViewport(0, 0, 800, 800);
 
 	// shaders are opengl object in memory, can only use them in references
 	//gluint is an unsigned aka positive int, our value aka reference that stores out vertex shader
@@ -127,16 +127,24 @@ int main() {
 	// storage in memory for pixels
 
 	//tell openGL to prepare the colour of a buffer and give it another colour
-	glClearColor(0.07f, 0.13f, 0.17f, 1.0f); // last number is the trasnparency 1 = opaque, 0 = completely transparent. 
+	glClearColor(0.07f, 0.13f, 0.0f, 1.0f); // last number is the trasnparency 1 = opaque, 0 = completely transparent. 
 	// now we tell openGL to execute the command we've told it to prepare for 
 	glClear(GL_COLOR_BUFFER_BIT); // at this point we have back buffer with the colour we want and front buffer with default
 	// back buffer is colour opengl has prepared for
 	// to see our colour we need to swap the buffers, since only the front buffer is displayed
 	glfwSwapBuffers(window);
 
+	float prev_time = float(glfwGetTime());
+	float angle = 0.0f;
 	while (!glfwWindowShouldClose(window)) { // dont close the window unless user manually closes it 
 		// tell glfw to process all the polled events such as window resizing, appearing
-		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
+		float time = float(glfwGetTime());
+		if (time - prev_time >= 0.1) {
+			angle += 0.1f;
+			prev_time = time;
+		};
+		glClearColor(float(sin(angle)), float(cos(angle)), float(tan(angle)), angle);
+		//glClearColor(1.0f, 0.0f, 0.05f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shaderProgram);
 		glBindVertexArray(VAO);
