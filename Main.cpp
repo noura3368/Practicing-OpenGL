@@ -56,12 +56,19 @@ int main() {
 	{
 		//we want equilateral triangle
 		// coordinate of left corner
+
 		-0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f,
-		0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // right corner
-		0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f // top corner
-
+		0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, 
+		0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f,
+		-0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f,
+		0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f,
+		0.0f, -0.5f * float(sqrt(3)) / 3, 0.0f
 	};
-
+	GLuint indices[] = {
+		0, 3, 5, // lower left triangle
+		3, 2, 4, // lower right triangle
+		5, 4, 1 // upper triangle
+	};
 	// create window project size (length and width), name, if we want full screen
 	GLFWwindow* window = glfwCreateWindow(800, 800, "Noura's Project", NULL, NULL);
 	// error checking if window doesnt open properly
@@ -102,21 +109,26 @@ int main() {
 	// want to send in big batches called buffers (different than front and back buffer)
 
 	// vertex array object stores pointers to one or more VBOs and tells openGL how to interpret them
-	GLuint VAO, VBO; //an array of vertex references but we only have one object (triangle so we only need one)
-	glGenVertexArrays(1, &VAO); // need to generate VAO before vbo 
+	GLuint VAO[1], VBO[1], EBO[1]; //an array of vertex references but we only have one object (triangle so we only need one)
+	glGenVertexArrays(1, &VAO[0]); // need to generate VAO before vbo 
 
 	//vertex buffer object to store our vertex
-	glGenBuffers(1, &VBO); // 1 3d object 
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO); // makes vbo the current object
+	glGenBuffers(1, &VBO[0]); // 1 3d object 
+	glGenBuffers(1, &EBO[0]); // generating reference value and storing in EBO for index buffer
+	glBindVertexArray(VAO[0]); 
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]); // makes vbo the current object
 	//this actually stores it 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //make sure to unbind after VAO because EBO is stored in VAO (if you unbind before, you are telling opengl you DONT want vao to use your ebo) 
 
 	// buffer from which the information is read is called the 'front buffer'
 	// buffer from which the info is being written is called back buffer
@@ -134,26 +146,20 @@ int main() {
 	// to see our colour we need to swap the buffers, since only the front buffer is displayed
 	glfwSwapBuffers(window);
 
-	float prev_time = float(glfwGetTime());
-	float angle = 0.0f;
 	while (!glfwWindowShouldClose(window)) { // dont close the window unless user manually closes it 
 		// tell glfw to process all the polled events such as window resizing, appearing
-		float time = float(glfwGetTime());
-		if (time - prev_time >= 0.1) {
-			angle += 0.1f;
-			prev_time = time;
-		};
-		glClearColor(float(sin(angle)), float(cos(angle)), float(tan(angle)), angle);
-		//glClearColor(1.0f, 0.0f, 0.05f, 0.0f);
+		//glClearColor(float(sin(angle)), float(cos(angle)), float(tan(angle)), angle);
+		glClearColor(1.0f, 0.0f, 0.05f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shaderProgram);
-		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glBindVertexArray(VAO[0]);
+		glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0); // shape we want to draw, number of indices, type of our indices, index of our indices 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
+	glDeleteVertexArrays(1, &VAO[0]);
+	glDeleteBuffers(1, &VBO[0]);
+	glDeleteBuffers(1, &EBO[0]);
 	glDeleteProgram(shaderProgram);
 
 	// once done with window, we want to delete it
